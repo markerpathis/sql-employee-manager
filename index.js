@@ -55,10 +55,13 @@
 /////////// prepared statements to populate the tables
 
 // const { default: inquirer } = require("inquirer");
+const fs = require("fs");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
 require("dotenv").config();
+
+const queryAllRoles = fs.readFileSync("db/queryAllRoles.sql").toString();
 
 // Connect to database
 const db = mysql.createConnection(
@@ -118,6 +121,8 @@ function initialQuestions() {
       viewEmployees();
     } else if (answers.inputTask === "Add Employee") {
       addEmployee();
+    } else {
+      process.exit(0);
     }
   });
 }
@@ -134,6 +139,7 @@ function addEmployee() {
           console.log(err);
         }
         console.log(result);
+        initialQuestions();
       }
     );
   });
@@ -150,7 +156,7 @@ function viewDepartments() {
 }
 
 function viewRoles() {
-  db.query(`SELECT * FROM role`, (err, result) => {
+  db.query(`${queryAllRoles}`, (err, result) => {
     if (err) {
       console.log(err);
     }
