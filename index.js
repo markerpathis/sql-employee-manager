@@ -54,6 +54,8 @@
 // index.js
 /////////// prepared statements to populate the tables
 
+// const { default: inquirer } = require("inquirer");
+const inquirer = require("inquirer");
 const mysql = require("mysql2");
 require("dotenv").config();
 
@@ -67,3 +69,71 @@ const db = mysql.createConnection(
   },
   console.log(`Connected to the courses_db database.`)
 );
+
+const promptInitial = [
+  {
+    type: "list",
+    message: "What would you like to do?",
+    name: "inputTask",
+    choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
+  },
+];
+
+const promptAddEmployee = [
+  {
+    type: "input",
+    message: "Employee's First Name:",
+    name: "inputEmployeeFirstName",
+  },
+  {
+    type: "input",
+    message: "Employee's Last Name:",
+    name: "inputEmployeeLastName",
+  },
+  {
+    type: "list",
+    message: "Employee's Role:",
+    name: "inputEmployeeRole",
+    choices: [1, 2, 3, 4, 5, 6, 7, 8],
+  },
+  {
+    type: "list",
+    message: "Employee's Manager:",
+    name: "inputEmployeeManager",
+    choices: [1, 3, 5, 7],
+  },
+];
+
+function initialQuestions() {
+  inquirer.prompt(promptInitial).then(function (answers) {
+    const input = answers;
+    console.log("finsihed");
+    console.log(input);
+    if (answers.inputTask === "Add Employee") {
+      addEmployee();
+    }
+  });
+}
+
+function addEmployee() {
+  inquirer.prompt(promptAddEmployee).then(function (answers) {
+    const input = answers;
+    console.log("finsihed");
+    console.log(input);
+    db.query(
+      `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${answers.inputEmployeeRole}, ${answers.inputEmployeeManager})`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(result);
+      }
+    );
+  });
+}
+
+function init() {
+  initialQuestions();
+}
+
+init();
