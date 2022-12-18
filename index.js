@@ -62,6 +62,8 @@ const cTable = require("console.table");
 require("dotenv").config();
 
 const queryAllRoles = fs.readFileSync("db/queryAllRoles.sql").toString();
+const queryAllDepartments = fs.readFileSync("db/queryAllDepartments.sql").toString();
+const queryAllEmployees = fs.readFileSync("db/queryAllEmployees.sql").toString();
 
 // Connect to database
 const db = mysql.createConnection(
@@ -146,7 +148,7 @@ function addEmployee() {
 }
 
 function viewDepartments() {
-  db.query(`SELECT * FROM department`, (err, result) => {
+  db.query(`${queryAllDepartments}`, (err, result) => {
     if (err) {
       console.log(err);
     }
@@ -166,7 +168,7 @@ function viewRoles() {
 }
 
 function viewEmployees() {
-  db.query(`SELECT * FROM employee`, (err, result) => {
+  db.query(`${queryAllEmployees}`, (err, result) => {
     if (err) {
       console.log(err);
     }
