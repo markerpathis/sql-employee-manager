@@ -4,7 +4,7 @@
 // view all departments
 /////////// presented with a formatted table, inlcuding...
 /////////// department names
-/////////// department id's 
+/////////// department id's
 
 // view all roles
 /////////// presented with a formatted table, inlcuding...
@@ -14,8 +14,8 @@
 /////////// salary for that role
 
 // view all employees
-/////////// presented with a formatted table showing employee data, including... 
-/////////// employee ids 
+/////////// presented with a formatted table showing employee data, including...
+/////////// employee ids
 /////////// first names
 /////////// last names
 /////////// job titles
@@ -24,15 +24,15 @@
 /////////// managers that the employees report to
 
 // add a department
-/////////// prompted to enter... 
-/////////// name of the department 
+/////////// prompted to enter...
+/////////// name of the department
 /////////// ...department is added to the database
 
 // add a role
-/////////// prompted to enter... 
+/////////// prompted to enter...
 /////////// name of the role
 /////////// salary
-/////////// department for the role 
+/////////// department for the role
 /////////// ... role is added to the database
 
 // add an employee
@@ -46,7 +46,6 @@
 /////////// select an employee to update
 /////////// select a new role to assign to the employee
 
-
 // What do we need...
 // dotenv to hide password
 // db folder
@@ -54,3 +53,17 @@
 /////////// seeds.sql - to prepopulate the db
 // index.js
 /////////// prepared statements to populate the tables
+
+const mysql = require("mysql2");
+require("dotenv").config();
+
+// Connect to database
+const db = mysql.createConnection(
+  {
+    host: "localhost",
+    user: "root",
+    password: process.env.PASSWORD,
+    database: "company_db",
+  },
+  console.log(`Connected to the courses_db database.`)
+);
