@@ -57,6 +57,7 @@
 // const { default: inquirer } = require("inquirer");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const cTable = require("console.table");
 require("dotenv").config();
 
 // Connect to database
@@ -109,7 +110,13 @@ function initialQuestions() {
     const input = answers;
     console.log("finsihed");
     console.log(input);
-    if (answers.inputTask === "Add Employee") {
+    if (answers.inputTask === "View All Departments") {
+      viewDepartments();
+    } else if (answers.inputTask === "View All Roles") {
+      viewRoles();
+    } else if (answers.inputTask === "View All Employees") {
+      viewEmployees();
+    } else if (answers.inputTask === "Add Employee") {
       addEmployee();
     }
   });
@@ -129,6 +136,36 @@ function addEmployee() {
         console.log(result);
       }
     );
+  });
+}
+
+function viewDepartments() {
+  db.query(`SELECT * FROM department`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.table(result);
+    initialQuestions();
+  });
+}
+
+function viewRoles() {
+  db.query(`SELECT * FROM role`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.table(result);
+    initialQuestions();
+  });
+}
+
+function viewEmployees() {
+  db.query(`SELECT * FROM employee`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.table(result);
+    initialQuestions();
   });
 }
 
