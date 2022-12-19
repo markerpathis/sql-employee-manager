@@ -10,6 +10,8 @@ const queryAllEmployees = fs.readFileSync("db/queryAllEmployees.sql").toString()
 
 let allRolesObj = [];
 let allRoles = [];
+let allManagersObj = [];
+let allManagers = [];
 
 // Connect to database
 const db = mysql.createConnection(
@@ -33,29 +35,43 @@ function initialQuestions() {
       return obj.title;
     });
 
-    const promptInitial = [
-      {
-        type: "list",
-        message: "What would you like to do?",
-        name: "inputTask",
-        choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
-      },
-    ];
+    db.query(
+      `SELECT CONCAT(mgr.first_name, " ", mgr.last_name) AS manager FROM employee emp LEFT JOIN employee mgr ON emp.manager_id = mgr.id WHERE mgr.id > 0 GROUP BY mgr.first_name, mgr.last_name;`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        console.log(result);
+        allManagersObj = result;
+        allManagers = allManagersObj.map(function (obj) {
+          return obj.manager;
+        });
 
-    inquirer.prompt(promptInitial).then(function (answers) {
-      const input = answers;
-      if (answers.inputTask === "View All Departments") {
-        viewDepartments();
-      } else if (answers.inputTask === "View All Roles") {
-        viewRoles();
-      } else if (answers.inputTask === "View All Employees") {
-        viewEmployees();
-      } else if (answers.inputTask === "Add Employee") {
-        addEmployee();
-      } else {
-        process.exit(0);
+        const promptInitial = [
+          {
+            type: "list",
+            message: "What would you like to do?",
+            name: "inputTask",
+            choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
+          },
+        ];
+
+        inquirer.prompt(promptInitial).then(function (answers) {
+          const input = answers;
+          if (answers.inputTask === "View All Departments") {
+            viewDepartments();
+          } else if (answers.inputTask === "View All Roles") {
+            viewRoles();
+          } else if (answers.inputTask === "View All Employees") {
+            viewEmployees();
+          } else if (answers.inputTask === "Add Employee") {
+            addEmployee();
+          } else {
+            process.exit(0);
+          }
+        });
       }
-    });
+    );
   });
 }
 
@@ -83,12 +99,13 @@ function addEmployee() {
       type: "list",
       message: "Employee's Manager:",
       name: "inputEmployeeManager",
-      choices: [1, 3, 5, 7],
+      choices: allManagers,
     },
   ];
 
   inquirer.prompt(promptAddEmployee).then(function (answers) {
     // Query used to search the role text from the inquirer answer and return the role ID to be used in the insert query below
+    console.log("ANSWERS: ", answers);
     db.query(`SELECT role.id FROM role WHERE role.title = "${answers.inputEmployeeRole}"`, (err, result) => {
       if (err) {
         console.log(err);
