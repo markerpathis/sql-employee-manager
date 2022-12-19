@@ -60,6 +60,8 @@ function initialQuestions() {
 }
 
 function addEmployee() {
+  employeeRole = [];
+
   const promptAddEmployee = [
     {
       type: "input",
@@ -86,26 +88,22 @@ function addEmployee() {
   ];
 
   inquirer.prompt(promptAddEmployee).then(function (answers) {
-    db.query(
-      `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${answers.inputEmployeeRole}, ${answers.inputEmployeeManager})`,
-      (err, result) => {
-        if (err) {
-          console.log(err);
-        }
-        console.log(result);
-        initialQuestions();
+    // Query used to search the role text from the inquirer answer and return the role ID to be used in the insert query below
+    db.query(`SELECT role.id FROM role WHERE role.title = "${answers.inputEmployeeRole}"`, (err, result) => {
+      if (err) {
+        console.log(err);
       }
-    );
-  });
-}
-
-function returnRole() {
-  db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`, (err, result) => {
-    if (err) {
-      console.log(err);
-    }
-    console.log("IN FUNCTION: ", result[0].title);
-    return result[0].title;
+      db.query(
+        `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${result[0].id}, ${answers.inputEmployeeManager})`,
+        (err, result) => {
+          if (err) {
+            console.log(err);
+          }
+          console.log(result);
+          initialQuestions();
+        }
+      );
+    });
   });
 }
 
@@ -120,7 +118,6 @@ function viewDepartments() {
 }
 
 function viewRoles() {
-  returnRole();
   db.query(`${queryAllRoles}`, (err, result) => {
     if (err) {
       console.log(err);
