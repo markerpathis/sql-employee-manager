@@ -65,6 +65,10 @@ const queryAllRoles = fs.readFileSync("db/queryAllRoles.sql").toString();
 const queryAllDepartments = fs.readFileSync("db/queryAllDepartments.sql").toString();
 const queryAllEmployees = fs.readFileSync("db/queryAllEmployees.sql").toString();
 
+// let allRoles = "";
+let allRolesObj = [];
+let allRoles = [];
+
 // Connect to database
 const db = mysql.createConnection(
   {
@@ -85,55 +89,68 @@ const promptInitial = [
   },
 ];
 
-const promptAddEmployee = [
-  {
-    type: "input",
-    message: "Employee's First Name:",
-    name: "inputEmployeeFirstName",
-  },
-  {
-    type: "input",
-    message: "Employee's Last Name:",
-    name: "inputEmployeeLastName",
-  },
-  {
-    type: "list",
-    message: "Employee's Role:",
-    name: "inputEmployeeRole",
-    choices: [1, 2, 3, 4, 5, 6, 7, 8],
-  },
-  {
-    type: "list",
-    message: "Employee's Manager:",
-    name: "inputEmployeeManager",
-    choices: [1, 3, 5, 7],
-  },
-];
-
 function initialQuestions() {
-  inquirer.prompt(promptInitial).then(function (answers) {
-    const input = answers;
-    console.log("finsihed");
-    console.log(input);
-    if (answers.inputTask === "View All Departments") {
-      viewDepartments();
-    } else if (answers.inputTask === "View All Roles") {
-      viewRoles();
-    } else if (answers.inputTask === "View All Employees") {
-      viewEmployees();
-    } else if (answers.inputTask === "Add Employee") {
-      addEmployee();
-    } else {
-      process.exit(0);
+  // db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`, (err, result) => {
+
+  db.query(`SELECT role.title AS title FROM role;`, (err, result) => {
+    if (err) {
+      console.log(err);
     }
+    console.log("RESULT:", result);
+    allRolesObj = result;
+    console.log("ALL ROLES OBJ", allRolesObj);
+    allRoles = allRolesObj.map(function (obj) {
+      return obj.title;
+    });
+    console.log("ALL ROLES :", allRoles);
+
+    inquirer.prompt(promptInitial).then(function (answers) {
+      const input = answers;
+      console.log("finsihed");
+      console.log(input);
+      if (answers.inputTask === "View All Departments") {
+        viewDepartments();
+      } else if (answers.inputTask === "View All Roles") {
+        viewRoles();
+      } else if (answers.inputTask === "View All Employees") {
+        viewEmployees();
+      } else if (answers.inputTask === "Add Employee") {
+        addEmployee();
+      } else {
+        process.exit(0);
+      }
+    });
   });
 }
 
 function addEmployee() {
+
+  const promptAddEmployee = [
+    {
+      type: "input",
+      message: "Employee's First Name:",
+      name: "inputEmployeeFirstName",
+    },
+    {
+      type: "input",
+      message: "Employee's Last Name:",
+      name: "inputEmployeeLastName",
+    },
+    {
+      type: "list",
+      message: "Employee's Role:",
+      name: "inputEmployeeRole",
+      choices: allRoles,
+    },
+    {
+      type: "list",
+      message: "Employee's Manager:",
+      name: "inputEmployeeManager",
+      choices: [1, 3, 5, 7],
+    },
+  ];
+
   inquirer.prompt(promptAddEmployee).then(function (answers) {
-    const input = answers;
-    console.log("finsihed");
-    console.log(input);
     db.query(
       `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${answers.inputEmployeeRole}, ${answers.inputEmployeeManager})`,
       (err, result) => {
@@ -146,6 +163,25 @@ function addEmployee() {
     );
   });
 }
+// ORDER BY role.id ASC
+function returnRole() {
+  db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    // console.log("Result:", result);
+    // console.log(result[0].title);
+    console.log("IN FUNCTION: ", result[0].title);
+    return result[0].title;
+  });
+}
+
+// async function returnRole() {
+//   const results = db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`);
+//   console.log(results[0]);
+// }
+
+// GROUP_CONCAT(CONCAT('''', your_column, '''' ))
 
 function viewDepartments() {
   db.query(`${queryAllDepartments}`, (err, result) => {
@@ -158,6 +194,7 @@ function viewDepartments() {
 }
 
 function viewRoles() {
+  returnRole();
   db.query(`${queryAllRoles}`, (err, result) => {
     if (err) {
       console.log(err);
