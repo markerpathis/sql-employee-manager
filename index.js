@@ -1,60 +1,3 @@
-// INQUIRER
-// PROMPT1 - view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-
-// view all departments
-/////////// presented with a formatted table, inlcuding...
-/////////// department names
-/////////// department id's
-
-// view all roles
-/////////// presented with a formatted table, inlcuding...
-/////////// the job title
-/////////// role id
-/////////// the department that role belongs to
-/////////// salary for that role
-
-// view all employees
-/////////// presented with a formatted table showing employee data, including...
-/////////// employee ids
-/////////// first names
-/////////// last names
-/////////// job titles
-/////////// departments
-/////////// salaries
-/////////// managers that the employees report to
-
-// add a department
-/////////// prompted to enter...
-/////////// name of the department
-/////////// ...department is added to the database
-
-// add a role
-/////////// prompted to enter...
-/////////// name of the role
-/////////// salary
-/////////// department for the role
-/////////// ... role is added to the database
-
-// add an employee
-/////////// prompted to enter....
-/////////// first name
-/////////// last name
-/////////// role
-/////////// ... employee is added to database
-
-// update an employee role
-/////////// select an employee to update
-/////////// select a new role to assign to the employee
-
-// What do we need...
-// dotenv to hide password
-// db folder
-/////////// schema.sql - to set up the database and tables for department role and employee
-/////////// seeds.sql - to prepopulate the db
-// index.js
-/////////// prepared statements to populate the tables
-
-// const { default: inquirer } = require("inquirer");
 const fs = require("fs");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
@@ -65,7 +8,6 @@ const queryAllRoles = fs.readFileSync("db/queryAllRoles.sql").toString();
 const queryAllDepartments = fs.readFileSync("db/queryAllDepartments.sql").toString();
 const queryAllEmployees = fs.readFileSync("db/queryAllEmployees.sql").toString();
 
-// let allRoles = "";
 let allRolesObj = [];
 let allRoles = [];
 
@@ -80,34 +22,28 @@ const db = mysql.createConnection(
   console.log(`Connected to the courses_db database.`)
 );
 
-const promptInitial = [
-  {
-    type: "list",
-    message: "What would you like to do?",
-    name: "inputTask",
-    choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
-  },
-];
-
 function initialQuestions() {
-  // db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`, (err, result) => {
-
   db.query(`SELECT role.title AS title FROM role;`, (err, result) => {
     if (err) {
       console.log(err);
     }
-    console.log("RESULT:", result);
     allRolesObj = result;
-    console.log("ALL ROLES OBJ", allRolesObj);
+    //update from array of objects to an array to be used by inquirer
     allRoles = allRolesObj.map(function (obj) {
       return obj.title;
     });
-    console.log("ALL ROLES :", allRoles);
+
+    const promptInitial = [
+      {
+        type: "list",
+        message: "What would you like to do?",
+        name: "inputTask",
+        choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
+      },
+    ];
 
     inquirer.prompt(promptInitial).then(function (answers) {
       const input = answers;
-      console.log("finsihed");
-      console.log(input);
       if (answers.inputTask === "View All Departments") {
         viewDepartments();
       } else if (answers.inputTask === "View All Roles") {
@@ -124,7 +60,6 @@ function initialQuestions() {
 }
 
 function addEmployee() {
-
   const promptAddEmployee = [
     {
       type: "input",
@@ -163,25 +98,16 @@ function addEmployee() {
     );
   });
 }
-// ORDER BY role.id ASC
+
 function returnRole() {
   db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`, (err, result) => {
     if (err) {
       console.log(err);
     }
-    // console.log("Result:", result);
-    // console.log(result[0].title);
     console.log("IN FUNCTION: ", result[0].title);
     return result[0].title;
   });
 }
-
-// async function returnRole() {
-//   const results = db.query(`SELECT GROUP_CONCAT(CONCAT('"', role.title,'"' )) as title FROM role;`);
-//   console.log(results[0]);
-// }
-
-// GROUP_CONCAT(CONCAT('''', your_column, '''' ))
 
 function viewDepartments() {
   db.query(`${queryAllDepartments}`, (err, result) => {
