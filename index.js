@@ -65,6 +65,8 @@ function initialQuestions() {
             viewEmployees();
           } else if (answers.inputTask === "Add Employee") {
             addEmployee();
+          } else if (answers.inputTask === "Add Department") {
+            addDepartment();
           } else {
             process.exit(0);
           }
@@ -75,8 +77,6 @@ function initialQuestions() {
 }
 
 function addEmployee() {
-  employeeRole = [];
-
   const promptAddEmployee = [
     {
       type: "input",
@@ -132,6 +132,26 @@ function addEmployee() {
           );
         }
       );
+    });
+  });
+}
+
+function addDepartment() {
+  const promptAddDepartment = [
+    {
+      type: "input",
+      message: "Department Name:",
+      name: "inputDepartmentName",
+    },
+  ];
+
+  inquirer.prompt(promptAddDepartment).then(function (answers) {
+    db.query(`INSERT INTO department (name) VALUES ("${answers.inputDepartmentName}")`, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+
+      initialQuestions();
     });
   });
 }
