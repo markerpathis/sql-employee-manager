@@ -41,7 +41,6 @@ function initialQuestions() {
         if (err) {
           console.log(err);
         }
-        console.log(result);
         allManagersObj = result;
         allManagers = allManagersObj.map(function (obj) {
           return obj.manager;
@@ -104,20 +103,33 @@ function addEmployee() {
   ];
 
   inquirer.prompt(promptAddEmployee).then(function (answers) {
+    let employeeRole = "";
+    let employeeMgr = "";
     // Query used to search the role text from the inquirer answer and return the role ID to be used in the insert query below
-    console.log("ANSWERS: ", answers);
     db.query(`SELECT role.id FROM role WHERE role.title = "${answers.inputEmployeeRole}"`, (err, result) => {
       if (err) {
         console.log(err);
       }
+      employeeRole = result[0].id;
+
       db.query(
-        `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${result[0].id}, ${answers.inputEmployeeManager})`,
+        `SELECT mgr.id as id FROM employee emp LEFT JOIN employee mgr ON emp.manager_id = mgr.id WHERE CONCAT(mgr.first_name, " ", mgr.last_name) = "${answers.inputEmployeeManager}" GROUP BY mgr.id;`,
         (err, result) => {
           if (err) {
             console.log(err);
           }
-          console.log(result);
-          initialQuestions();
+          employeeMgr = result[0].id;
+
+          db.query(
+            `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${employeeRole}, ${employeeMgr})`,
+            (err, result) => {
+              if (err) {
+                console.log(err);
+              }
+
+              initialQuestions();
+            }
+          );
         }
       );
     });
