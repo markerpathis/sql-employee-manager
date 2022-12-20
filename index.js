@@ -79,23 +79,30 @@ function initialQuestions() {
             ];
 
             inquirer.prompt(promptInitial).then(function (answers) {
-              const input = answers;
-              if (answers.inputTask === "View All Departments") {
-                viewDepartments();
-              } else if (answers.inputTask === "View All Roles") {
-                viewRoles();
-              } else if (answers.inputTask === "View All Employees") {
-                viewEmployees();
-              } else if (answers.inputTask === "Add Employee") {
-                addEmployee();
-              } else if (answers.inputTask === "Add Department") {
-                addDepartment();
-              } else if (answers.inputTask === "Add Role") {
-                addRole();
-              } else if (answers.inputTask === "Update Employee Role") {
-                updateEmployee();
-              } else {
-                process.exit(0);
+              switch (answers.inputTask) {
+                case "View All Departments":
+                  viewDepartments();
+                  break;
+                case "View All Roles":
+                  viewRoles();
+                  break;
+                case "View All Employees":
+                  viewEmployees();
+                  break;
+                case "Add Employee":
+                  addEmployee();
+                  break;
+                case "Add Department":
+                  addDepartment();
+                  break;
+                case "Add Role":
+                  addRole();
+                  break;
+                case "Update Employee Role":
+                  updateEmployee();
+                  break;
+                default:
+                  process.exit(0);
               }
             });
           });
