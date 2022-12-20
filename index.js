@@ -12,6 +12,8 @@ let allRolesObj = [];
 let allRoles = [];
 let allManagersObj = [];
 let allManagers = [];
+let allDepartmentsObj = [];
+let allDepartments = [];
 
 // Connect to database
 const db = mysql.createConnection(
@@ -46,30 +48,44 @@ function initialQuestions() {
           return obj.manager;
         });
 
-        const promptInitial = [
-          {
-            type: "list",
-            message: "What would you like to do?",
-            name: "inputTask",
-            choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
-          },
-        ];
-
-        inquirer.prompt(promptInitial).then(function (answers) {
-          const input = answers;
-          if (answers.inputTask === "View All Departments") {
-            viewDepartments();
-          } else if (answers.inputTask === "View All Roles") {
-            viewRoles();
-          } else if (answers.inputTask === "View All Employees") {
-            viewEmployees();
-          } else if (answers.inputTask === "Add Employee") {
-            addEmployee();
-          } else if (answers.inputTask === "Add Department") {
-            addDepartment();
-          } else {
-            process.exit(0);
+        db.query(`SELECT name FROM department ORDER BY name ASC;`, (err, result) => {
+          if (err) {
+            console.log(err);
           }
+          allDepartmentsObj = result;
+          allDepartments = allDepartmentsObj.map(function (obj) {
+            return obj.name;
+          });
+
+          console.log("ALL DEPARTMENTS: ", allDepartments);
+
+          const promptInitial = [
+            {
+              type: "list",
+              message: "What would you like to do?",
+              name: "inputTask",
+              choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
+            },
+          ];
+
+          inquirer.prompt(promptInitial).then(function (answers) {
+            const input = answers;
+            if (answers.inputTask === "View All Departments") {
+              viewDepartments();
+            } else if (answers.inputTask === "View All Roles") {
+              viewRoles();
+            } else if (answers.inputTask === "View All Employees") {
+              viewEmployees();
+            } else if (answers.inputTask === "Add Employee") {
+              addEmployee();
+            } else if (answers.inputTask === "Add Department") {
+              addDepartment();
+            } else if (answers.inputTask === "Add Role") {
+              addRole();
+            } else {
+              process.exit(0);
+            }
+          });
         });
       }
     );
@@ -152,6 +168,44 @@ function addDepartment() {
       }
 
       initialQuestions();
+    });
+  });
+}
+
+function addRole() {
+  const promptAddRole = [
+    {
+      type: "input",
+      message: "Role Name:",
+      name: "inputRoleName",
+    },
+    {
+      type: "input",
+      message: "Role Salary:",
+      name: "inputRoleSalary",
+    },
+    {
+      type: "list",
+      message: "Role's Department:",
+      name: "inputRoleDepartment",
+      choices: allDepartments,
+    },
+  ];
+
+  inquirer.prompt(promptAddRole).then(function (answers) {
+    let department = "";
+    db.query(`SELECT id FROM department WHERE name = "${answers.inputRoleDepartment}"`, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      department = result[0].id;
+
+      db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${answers.inputRoleName}", "${answers.inputRoleSalary}", ${department})`, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        initialQuestions();
+      });
     });
   });
 }
