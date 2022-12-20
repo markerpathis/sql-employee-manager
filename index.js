@@ -14,6 +14,8 @@ let allManagersObj = [];
 let allManagers = [];
 let allDepartmentsObj = [];
 let allDepartments = [];
+let allEmployeesObj = [];
+let allEmployees = [];
 
 // Connect to database
 const db = mysql.createConnection(
@@ -57,34 +59,45 @@ function initialQuestions() {
             return obj.name;
           });
 
-          console.log("ALL DEPARTMENTS: ", allDepartments);
-
-          const promptInitial = [
-            {
-              type: "list",
-              message: "What would you like to do?",
-              name: "inputTask",
-              choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
-            },
-          ];
-
-          inquirer.prompt(promptInitial).then(function (answers) {
-            const input = answers;
-            if (answers.inputTask === "View All Departments") {
-              viewDepartments();
-            } else if (answers.inputTask === "View All Roles") {
-              viewRoles();
-            } else if (answers.inputTask === "View All Employees") {
-              viewEmployees();
-            } else if (answers.inputTask === "Add Employee") {
-              addEmployee();
-            } else if (answers.inputTask === "Add Department") {
-              addDepartment();
-            } else if (answers.inputTask === "Add Role") {
-              addRole();
-            } else {
-              process.exit(0);
+          // query to return the concatatenated names of all employees to be used in the updateEmployee inquirer questions
+          db.query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee ORDER BY first_name ASC `, (err, result) => {
+            if (err) {
+              console.log(err);
             }
+            allEmployeesObj = result;
+            allEmployees = allEmployeesObj.map(function (obj) {
+              return obj.name;
+            });
+
+            const promptInitial = [
+              {
+                type: "list",
+                message: "What would you like to do?",
+                name: "inputTask",
+                choices: ["View All Departments", "View All Roles", "View All Employees", "Add Department", "Add Role", "Add Employee", "Update Employee Role", "Quit"],
+              },
+            ];
+
+            inquirer.prompt(promptInitial).then(function (answers) {
+              const input = answers;
+              if (answers.inputTask === "View All Departments") {
+                viewDepartments();
+              } else if (answers.inputTask === "View All Roles") {
+                viewRoles();
+              } else if (answers.inputTask === "View All Employees") {
+                viewEmployees();
+              } else if (answers.inputTask === "Add Employee") {
+                addEmployee();
+              } else if (answers.inputTask === "Add Department") {
+                addDepartment();
+              } else if (answers.inputTask === "Add Role") {
+                addRole();
+              } else if (answers.inputTask === "Update Employee Role") {
+                updateEmployee();
+              } else {
+                process.exit(0);
+              }
+            });
           });
         });
       }
@@ -201,6 +214,40 @@ function addRole() {
       department = result[0].id;
 
       db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${answers.inputRoleName}", "${answers.inputRoleSalary}", ${department})`, (err, result) => {
+        if (err) {
+          console.log(err);
+        }
+        initialQuestions();
+      });
+    });
+  });
+}
+
+function updateEmployee() {
+  const promptUpdateEmployeeRole = [
+    {
+      type: "list",
+      message: "Employee to update:",
+      name: "inputUpdatedEmployeeName",
+      choices: allEmployeesObj,
+    },
+    {
+      type: "list",
+      message: "Employee's updated role:",
+      name: "inputUpdatedEmployeeRole",
+      choices: allRoles,
+    },
+  ];
+
+  inquirer.prompt(promptUpdateEmployeeRole).then(function (answers) {
+    let role = "";
+    db.query(`SELECT id FROM role WHERE title = "${answers.inputUpdatedEmployeeRole}"`, (err, result) => {
+      if (err) {
+        console.log(err);
+      }
+      role = result[0].id;
+
+      db.query(`UPDATE employee SET role_id = ${role} WHERE CONCAT(first_name, " ", last_name) = "${answers.inputUpdatedEmployeeName}"`, (err, result) => {
         if (err) {
           console.log(err);
         }
