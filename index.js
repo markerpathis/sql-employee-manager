@@ -1,13 +1,16 @@
+// Packages needed for this application
 const fs = require("fs");
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const cTable = require("console.table");
 require("dotenv").config();
 
+// Reads and returns the content of the queryAll sql files to be used in the viewDepartments, viewRoles, viewEmployees functions
 const queryAllRoles = fs.readFileSync("db/queryAllRoles.sql").toString();
 const queryAllDepartments = fs.readFileSync("db/queryAllDepartments.sql").toString();
 const queryAllEmployees = fs.readFileSync("db/queryAllEmployees.sql").toString();
 
+// Emptry arrays to be used in the sql SELECT queries. The obj versions are used to save the array of objects, which are then mapped to the other fields
 let allRolesObj = [];
 let allRoles = [];
 let allManagersObj = [];
@@ -29,6 +32,9 @@ const db = mysql.createConnection(
 );
 
 function initialQuestions() {
+  // db queries are included in initialQuestions so the results can be used to populte the inquirer lists where necessary
+
+  // Query to SELECT the role titles, to be used in the inquirer prompts for promptAddEmployee and promptUpdateEmployeeRole
   db.query(`SELECT role.title AS title FROM role;`, (err, result) => {
     if (err) {
       console.log(err);
@@ -39,36 +45,42 @@ function initialQuestions() {
       return obj.title;
     });
 
+    // Query to SELECT the manager names, to be used in the inquirer prompts for promptAddEmployee
     db.query(
       `SELECT CONCAT(mgr.first_name, " ", mgr.last_name) AS manager FROM employee emp LEFT JOIN employee mgr ON emp.manager_id = mgr.id WHERE mgr.id > 0 GROUP BY mgr.first_name, mgr.last_name;`,
       (err, result) => {
         if (err) {
           console.log(err);
         }
+        // the SELECT query returns an array of objects which needs to be mapped to another array to be used by inquirer
         allManagersObj = result;
         allManagers = allManagersObj.map(function (obj) {
           return obj.manager;
         });
 
+        // Query to SELECT the department names, to be used in the inquirer prompts for promptAddRole
         db.query(`SELECT name FROM department ORDER BY name ASC;`, (err, result) => {
           if (err) {
             console.log(err);
           }
+          // the SELECT query returns an array of objects which needs to be mapped to another array to be used by inquirer
           allDepartmentsObj = result;
           allDepartments = allDepartmentsObj.map(function (obj) {
             return obj.name;
           });
 
-          // query to return the concatatenated names of all employees to be used in the updateEmployee inquirer questions
+          // query to SELECT the employee names, to be used in the inquirer prompts for promptUpdateEmployeeRole
           db.query(`SELECT CONCAT(first_name, " ", last_name) AS name FROM employee ORDER BY first_name ASC `, (err, result) => {
             if (err) {
               console.log(err);
             }
+            // the SELECT query returns an array of objects which needs to be mapped to another array to be used by inquirer
             allEmployeesObj = result;
             allEmployees = allEmployeesObj.map(function (obj) {
               return obj.name;
             });
 
+            // Initial inquirer prompts to determine what the user wants to view, add, or update
             const promptInitial = [
               {
                 type: "list",
@@ -78,6 +90,7 @@ function initialQuestions() {
               },
             ];
 
+            // calls the functions to view, add, or update based on the answer from promptInitial
             inquirer.prompt(promptInitial).then(function (answers) {
               switch (answers.inputTask) {
                 case "View All Departments":
@@ -148,6 +161,7 @@ function addEmployee() {
       }
       employeeRole = result[0].id;
 
+      // Query to search the manager id based on the manager name select, which is then used in the insert query below
       db.query(
         `SELECT mgr.id as id FROM employee emp LEFT JOIN employee mgr ON emp.manager_id = mgr.id WHERE CONCAT(mgr.first_name, " ", mgr.last_name) = "${answers.inputEmployeeManager}" GROUP BY mgr.id;`,
         (err, result) => {
@@ -156,6 +170,7 @@ function addEmployee() {
           }
           employeeMgr = result[0].id;
 
+          // inserts the new employee in the db
           db.query(
             `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${answers.inputEmployeeFirstName}", "${answers.inputEmployeeLastName}", ${employeeRole}, ${employeeMgr})`,
             (err, result) => {
@@ -172,6 +187,7 @@ function addEmployee() {
   });
 }
 
+// function to gather the department name from the user and insert it into the database
 function addDepartment() {
   const promptAddDepartment = [
     {
@@ -181,6 +197,7 @@ function addDepartment() {
     },
   ];
 
+  // query to INSERT the new department into the db
   inquirer.prompt(promptAddDepartment).then(function (answers) {
     db.query(`INSERT INTO department (name) VALUES ("${answers.inputDepartmentName}")`, (err, result) => {
       if (err) {
@@ -214,12 +231,14 @@ function addRole() {
 
   inquirer.prompt(promptAddRole).then(function (answers) {
     let department = "";
+    // query to SELECT the id of the department based on the department select in inquirer
     db.query(`SELECT id FROM department WHERE name = "${answers.inputRoleDepartment}"`, (err, result) => {
       if (err) {
         console.log(err);
       }
       department = result[0].id;
 
+      // query to INSERT the new role into the db
       db.query(`INSERT INTO role (title, salary, department_id) VALUES ("${answers.inputRoleName}", "${answers.inputRoleSalary}", ${department})`, (err, result) => {
         if (err) {
           console.log(err);
@@ -248,12 +267,14 @@ function updateEmployee() {
 
   inquirer.prompt(promptUpdateEmployeeRole).then(function (answers) {
     let role = "";
+    // query to SELECT the role id based on the role selected in inquirier
     db.query(`SELECT id FROM role WHERE title = "${answers.inputUpdatedEmployeeRole}"`, (err, result) => {
       if (err) {
         console.log(err);
       }
       role = result[0].id;
 
+      // query to UPDATE the selected employee's role
       db.query(`UPDATE employee SET role_id = ${role} WHERE CONCAT(first_name, " ", last_name) = "${answers.inputUpdatedEmployeeName}"`, (err, result) => {
         if (err) {
           console.log(err);
@@ -264,6 +285,7 @@ function updateEmployee() {
   });
 }
 
+// the three View function below
 function viewDepartments() {
   db.query(`${queryAllDepartments}`, (err, result) => {
     if (err) {
