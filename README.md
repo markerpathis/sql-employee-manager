@@ -34,6 +34,7 @@ In order to use this application the user needs to install the Node dependencies
 Once the dependencies are installed, the user should use mysql to run the schema.sql file to set up the database and tables. If the user would also like to input some test records to the tables, a seeds.sql file is also provided. After these steps, the user can enter the following command into the command-line to being seeing the prompts from inquirer - "node index.js".
 
 A video walkthrough of the command-line application being used is included at the link below:<br />
+https://user-images.githubusercontent.com/111654725/208801201-5adfde6c-ad71-4cc5-bf08-d970411c57a0.mp4
 
 ## License
 
